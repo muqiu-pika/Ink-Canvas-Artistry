@@ -11,10 +11,12 @@ using System.Windows.Media;
 using File = System.IO.File;
 using MessageBox = System.Windows.MessageBox;
 
+
 namespace Ink_Canvas
 {
     public partial class MainWindow : Window
     {
+        private MW_Video videoHelper;
         #region Window Initialization
 
         public MainWindow()
@@ -24,6 +26,11 @@ namespace Ink_Canvas
                 处于 PPT 放映内：BtnPPTSlideShowEnd.Visibility
             */
             InitializeComponent();
+
+            TimeMachine timeMachine = new TimeMachine();  // 创建TimeMachine实例
+            videoHelper = new MW_Video(ThumbnailList, CameraDeviceList, SaveResultBorder, SaveResultIcon, SaveResultText, SaveButton, CaptureButton, ConfirmButton, CancelButton, ScreenshotButton, inkCanvas, timeMachine);
+            videoHelper.LoadCameraDevices();
+            ToolPanelContainer.Visibility = Visibility.Collapsed;
 
             BlackboardLeftSide.Visibility = Visibility.Collapsed;
             BlackboardCenterSide.Visibility = Visibility.Collapsed;
@@ -159,6 +166,53 @@ namespace Ink_Canvas
             if (inkCanvas1.EditingMode == InkCanvasEditingMode.Ink) forcePointEraser = !forcePointEraser;
         }
 
+        private void VideoButton_Click(object sender, RoutedEventArgs e)
+        {
+            ToolPanelContainer.Visibility = ToolPanelContainer.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void CaptureButton_Click(object sender, RoutedEventArgs e)
+        {
+            videoHelper.CaptureButton_Click(sender, e);
+        }
+
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            videoHelper.HandleSaveButtonClick();
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            videoHelper.HandleCancelButtonClick();
+        }
+
+        private void ConfirmButton_Click(object sender, RoutedEventArgs e)
+        {
+            videoHelper.HandleSaveButtonClick();
+        }
+
+        private void CameraDeviceList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            videoHelper.CameraDeviceList_SelectionChanged(sender, e);
+        }
+
+        private void ScreenshotButton_Click(object sender, RoutedEventArgs e)
+        {
+            videoHelper.CaptureScreenshot();
+        }
+
+        private void ThumbnailList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            videoHelper.HandleThumbnailSelectionChanged();
+        }
+
+        // 添加 BtnImageInsert_Click 方法
+        private void BtnImageInsert_Click(object sender, RoutedEventArgs e)
+        {
+            // 此处调用 MW_Video 中的方法来处理图像插入
+            videoHelper.CaptureButton_Click(sender, e);
+        }
+
         #endregion Ink Canvas Functions
 
         #region Definations and Loading
@@ -212,6 +266,13 @@ namespace Ink_Canvas
         private void Window_Closed(object sender, EventArgs e)
         {
             LogHelper.WriteLogToFile("Ink Canvas closed", LogHelper.LogType.Event);
+        }
+
+        // 重写窗口关闭事件，确保摄像头资源被释放
+        protected override void OnClosed(EventArgs e)
+        {
+            videoHelper.StopCamera();
+            base.OnClosed(e);
         }
 
         #endregion Definations and Loading

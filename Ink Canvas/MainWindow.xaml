@@ -794,6 +794,95 @@
                 </Viewbox>
             </Border>
         </Grid>
+        <!-- 视频展台 -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 工具栏 -->
+            <StackPanel x:Name="ToolPanelContainer" Background="White" Width="260" VerticalAlignment="Stretch">
+                <!-- 缩略图列表上方留空 -->
+                <Border Height="50" Background="White"/>
+
+                <!-- 缩略图列表 -->
+                <ListBox x:Name="ThumbnailList" Width="260" Height="450" SelectionMode="Single" SelectionChanged="ThumbnailList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Width="260" Height="231">
+                                <Border BorderThickness="2" BorderBrush="Black" />
+                                <Image Source="{Binding Image}" Stretch="Uniform" Width="260" Height="231" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <TextBlock Text="{Binding Count}" Width="5" Height="5" Foreground="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="8,0,0,0" />
+                                <TextBlock Text="✔" Foreground="#42A5F5" FontSize="24" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- 确定按钮和取消按钮 -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <!-- 上传按钮 -->
+                    <Button x:Name="CaptureButton" Width="118" Height="55" Margin="0,0,8,0" Padding="0" BorderThickness="0" Click="CaptureButton_Click">
+                        <Border Width="118" Height="55" Background="White" BorderBrush="#42A5F5" BorderThickness="1" CornerRadius="10">
+                            <Grid Margin="5">
+                                <TextBlock Width="26" Height="25" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="Black" Text="&#xe8e5;" Margin="10,0,70,0" />
+                                <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" Foreground="Black" Text="上传照片" Margin="48,0,0,0" />
+                            </Grid>
+                        </Border>
+                    </Button>
+                    <!-- 确定按钮 -->
+                    <Button x:Name="SaveButton" Width="118" Height="55" Margin="0,0,8,0" Padding="0" BorderThickness="0" Click="SaveButton_Click">
+                        <Border Width="118" Height="55" Background="White" BorderBrush="#42A5F5" BorderThickness="1" CornerRadius="10">
+                            <Grid Margin="5">
+                                <TextBlock Height="25" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="Black" Text="&#xe74e;" Margin="10,0,71,0" Width="25" />
+                                <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" Foreground="Black" Text="保存照片" Margin="48,0,0,0" />
+                            </Grid>
+                        </Border>
+                    </Button>
+                    <!-- 取消按钮 -->
+                    <Button x:Name="CancelButton" Width="118" Height="55" Margin="0,0,8,0" Padding="0" BorderThickness="0" Click="CancelButton_Click" Visibility="Collapsed">
+                        <Border Width="118" Height="55" Background="White" BorderBrush="#42A5F5" BorderThickness="1" CornerRadius="10">
+                            <Grid Margin="5">
+                                <TextBlock Width="26" Height="26" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="Black" Text="&#xE711;" />
+                                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="Black" Text="取消" />
+                            </Grid>
+                        </Border>
+                    </Button>
+                    <!-- 确认按钮 -->
+                    <Button x:Name="ConfirmButton" Width="118" Height="55" Margin="0,0,8,0" Padding="0" BorderThickness="0" Click="ConfirmButton_Click" Visibility="Collapsed">
+                        <Border Width="118" Height="55" Background="White" BorderBrush="#42A5F5" BorderThickness="1" CornerRadius="10">
+                            <Grid Margin="5">
+                                <TextBlock Width="26" Height="26" VerticalAlignment="Center" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="Black" Text="&#xE78C;" />
+                                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="Black" Text="确认" />
+                            </Grid>
+                        </Border>
+                    </Button>
+                </StackPanel>
+
+                <!-- 摄像头设备列表 -->
+                <ListBox x:Name="CameraDeviceList" Width="260" Height="450" SelectionMode="Single" SelectionChanged="CameraDeviceList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Width="260" Height="231">
+                                <Border BorderThickness="2" BorderBrush="Black" />
+                                <TextBlock Text="{Binding DeviceName}" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" />
+                                <TextBlock Text="{Binding Count}" Width="5" Height="5" Foreground="Black" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="8,0,0,0" />
+                                <TextBlock Text="✔" Foreground="#42A5F5" FontSize="24" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+
+            <!-- 保存结果显示 -->
+            <Border x:Name="SaveResultBorder" Width="200" Height="100" Background="LightGray" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock x:Name="SaveResultIcon" Width="26" Height="26" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="Green" />
+                    <TextBlock x:Name="SaveResultText" FontSize="16" Foreground="Green" Margin="10,0,0,0" />
+                </StackPanel>
+            </Border>
+        </Grid>
         <!--  // 画板界面 //  -->
         <Grid Visibility="{Binding ElementName=GridBackgroundCoverHolder, Path=Visibility}">
             <!--  左下角  -->
@@ -949,6 +1038,29 @@
                                         Foreground="{DynamicResource BoardBarForeground}"
                                         Opacity="{Binding ElementName=BoardLeftPannelNextPage1, Path=Opacity}"
                                         Text="加页" />
+                                </Grid>
+                            </Border>
+                        </Button>
+                        <!-- 新的照片模式按钮 -->
+                        <Button Width="60" Height="55" Padding="0" BorderThickness="0" Click="VideoButton_Click">
+                            <Border Width="60" Height="55" Background="{DynamicResource BoardBarBackground}" BorderBrush="{DynamicResource BoardBarBorderBrush}" BorderThickness="0,1,0.25,1">
+                                <Grid Margin="5">
+                                    <ikw:SimpleStackPanel Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Top" Background="Transparent" Orientation="Horizontal">
+                                        <ui:FontIcon Width="28" Height="22" FontFamily="{StaticResource FluentIconFontFamily}" FontSize="22" Foreground="{DynamicResource BoardBarForeground}" Glyph="&#xe8b9;" />
+                                    </ikw:SimpleStackPanel>
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="12" Foreground="{DynamicResource BoardBarForeground}" Text="照片" />
+                                </Grid>
+                            </Border>
+                        </Button>
+
+                        <!-- 截屏按钮 -->
+                        <Button x:Name="ScreenshotButton" Width="60" Height="55" Padding="0" BorderThickness="0" Click="ScreenshotButton_Click" Visibility="Collapsed">
+                            <Border Width="60" Height="55" Background="{DynamicResource BoardBarBackground}" BorderBrush="{DynamicResource BoardBarBorderBrush}" BorderThickness="0,1,0.25,1">
+                                <Grid Margin="5">
+                                    <ikw:SimpleStackPanel Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Top" Background="Transparent" Orientation="Horizontal">
+                                        <ui:FontIcon Width="28" Height="22" FontFamily="{StaticResource FluentIconFontFamily}" FontSize="22" Foreground="{DynamicResource BoardBarForeground}" Glyph="&#xe722;" />
+                                    </ikw:SimpleStackPanel>
+                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Bottom" FontSize="12" Foreground="{DynamicResource BoardBarForeground}" Text="截屏" />
                                 </Grid>
                             </Border>
                         </Button>
@@ -6400,31 +6512,6 @@
                                         FontSize="8"
                                         Foreground="{DynamicResource FloatBarForeground}"
                                         Text="插入图片"
-                                        TextAlignment="Center"
-                                        Visibility="{Binding ElementName=FloatBarSelectIconTextBlock, Path=Visibility}" />
-                                </ikw:SimpleStackPanel>
-                            </Button><Button
-                                Width="30"
-                                Height="32"
-                                Padding="0"
-                                BorderThickness="0"
-                                Click="BtnMediaInsert_Click">
-                                <ikw:SimpleStackPanel
-                                    HorizontalAlignment="Center"
-                                    Background="Transparent"
-                                    Orientation="Vertical">
-                                    <ui:FontIcon
-                                        Width="30"
-                                        Height="22"
-                                        FontFamily="{StaticResource FluentIconFontFamily}"
-                                        FontSize="16"
-                                        Foreground="{DynamicResource FloatBarForeground}"
-                                        Glyph="&#xee71;" />
-                                    <TextBlock
-                                        Margin="-0.75,-1,0,0"
-                                        FontSize="8"
-                                        Foreground="{DynamicResource FloatBarForeground}"
-                                        Text="插入视频"
                                         TextAlignment="Center"
                                         Visibility="{Binding ElementName=FloatBarSelectIconTextBlock, Path=Visibility}" />
                                 </ikw:SimpleStackPanel>
