@@ -10,21 +10,71 @@ using Microsoft.Win32;
 
 namespace Ink_Canvas
 {
-    public partial class MainWindow : Window
+    public class MW_ElementsControls
     {
-        #region Image
-        private async void BtnImageInsert_Click(object sender, RoutedEventArgs e)
+        private InkCanvas inkCanvas;
+        private TimeMachine timeMachine;
+        private ListBox thumbnailList;
+        private Settings settings;  // 假设 Settings 是一个实例类
+
+        public MW_ElementsControls(InkCanvas inkCanvas, TimeMachine timeMachine, ListBox thumbnailList)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Image files (*.jpg; *.jpeg; *.png; *.bmp)|*.jpg;*.jpeg;*.png;*.bmp";
+            this.inkCanvas = inkCanvas;
+            this.timeMachine = timeMachine;
+            this.thumbnailList = thumbnailList;
+            this.settings = new Settings(); // 实例化 Settings 对象
+        }
+
+        #region Image
+        public async void BtnImageInsert_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Image files (*.jpg; *.jpeg; *.png; *.bmp)|*.jpg;*.jpeg;*.png;*.bmp",
+                Multiselect = true
+            };
 
             if (openFileDialog.ShowDialog() == true)
             {
-                string filePath = openFileDialog.FileName;
+                foreach (string filePath in openFileDialog.FileNames)
+                {
+                    BitmapImage bitmapImage = new BitmapImage(new Uri(filePath));
+                    AddThumbnailToList(bitmapImage);
+                }
+            }
+        }
 
-                byte[] imageBytes = await Task.Run(() => File.ReadAllBytes(filePath));
+        private void AddThumbnailToList(BitmapImage bitmapImage)
+        {
+            double maxWidth = 130;
+            double maxHeight = 231;
+            double scale = Math.Min(maxWidth / bitmapImage.PixelWidth, maxHeight / bitmapImage.PixelHeight);
 
-                Image image = await CreateAndCompressImageAsync(imageBytes);
+            Image image = new Image
+            {
+                Source = bitmapImage,
+                Width = bitmapImage.PixelWidth * scale,
+                Height = bitmapImage.PixelHeight * scale
+            };
+
+            ListBoxItem item = new ListBoxItem
+            {
+                Content = image,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Tag = bitmapImage
+            };
+
+            item.Selected += Thumbnail_Selected;
+            thumbnailList.Items.Add(item);
+        }
+
+        private async void Thumbnail_Selected(object sender, RoutedEventArgs e)
+        {
+            ListBoxItem selectedItem = sender as ListBoxItem;
+            if (selectedItem != null && selectedItem.Tag is BitmapImage bitmapImage)
+            {
+                Image image = await CreateAndCompressImageAsync(bitmapImage);
 
                 if (image != null)
                 {
@@ -42,23 +92,23 @@ namespace Ink_Canvas
             }
         }
 
-        private async Task<Image> CreateAndCompressImageAsync(byte[] imageBytes)
+        public void ThumbnailList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            return await Dispatcher.InvokeAsync(() =>
+            if (thumbnailList.SelectedItem != null)
             {
-                BitmapImage bitmapImage = new BitmapImage();
-                using (MemoryStream ms = new MemoryStream(imageBytes))
-                {
-                    bitmapImage.BeginInit();
-                    bitmapImage.StreamSource = ms;
-                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmapImage.EndInit();
-                }
+                ListBoxItem selectedItem = thumbnailList.SelectedItem as ListBoxItem;
+                selectedItem?.RaiseEvent(new RoutedEventArgs(ListBoxItem.SelectedEvent, selectedItem));
+            }
+        }
 
+        private async Task<Image> CreateAndCompressImageAsync(BitmapImage bitmapImage)
+        {
+            return await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
                 int width = bitmapImage.PixelWidth;
                 int height = bitmapImage.PixelHeight;
 
-                if (isLoaded && Settings.Canvas.IsCompressPicturesUploaded && (width > 1920 || height > 1080))
+                if (settings.Canvas.IsCompressPicturesUploaded && (width > 1920 || height > 1080))
                 {
                     double scaleX = 1920.0 / width;
                     double scaleY = 1080.0 / height;
@@ -66,19 +116,23 @@ namespace Ink_Canvas
 
                     TransformedBitmap transformedBitmap = new TransformedBitmap(bitmapImage, new ScaleTransform(scale, scale));
 
-                    Image image = new Image();
-                    image.Source = transformedBitmap;
-                    image.Width = transformedBitmap.PixelWidth;
-                    image.Height = transformedBitmap.PixelHeight;
+                    Image image = new Image
+                    {
+                        Source = transformedBitmap,
+                        Width = transformedBitmap.PixelWidth,
+                        Height = transformedBitmap.PixelHeight
+                    };
 
                     return image;
                 }
                 else
                 {
-                    Image image = new Image();
-                    image.Source = bitmapImage;
-                    image.Width = width;
-                    image.Height = height;
+                    Image image = new Image
+                    {
+                        Source = bitmapImage,
+                        Width = width,
+                        Height = height
+                    };
 
                     return image;
                 }
@@ -87,57 +141,65 @@ namespace Ink_Canvas
         #endregion
 
         #region Media
-        private async void BtnMediaInsert_Click(object sender, RoutedEventArgs e)
+        public async void BtnMediaInsert_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Media files (*.mp4; *.avi; *.wmv)|*.mp4;*.avi;*.wmv";
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Media files (*.mp4; *.avi; *.wmv)|*.mp4;*.avi;*.wmv",
+                Multiselect = false
+            };
 
             if (openFileDialog.ShowDialog() == true)
             {
                 string filePath = openFileDialog.FileName;
 
-                byte[] mediaBytes = await Task.Run(() => File.ReadAllBytes(filePath));
-
-                MediaElement mediaElement = await CreateMediaElementAsync(filePath);
-
-                if (mediaElement != null)
+                await Task.Run(async () =>
                 {
-                    CenterAndScaleElement(mediaElement);
+                    byte[] mediaBytes = File.ReadAllBytes(filePath);
+                    MediaElement mediaElement = await CreateMediaElementAsync(filePath);
 
-                    InkCanvas.SetLeft(mediaElement, 0);
-                    InkCanvas.SetTop(mediaElement, 0);
-                    inkCanvas.Children.Add(mediaElement);
+                    if (mediaElement != null)
+                    {
+                        CenterAndScaleElement(mediaElement);
 
-                    mediaElement.LoadedBehavior = MediaState.Manual;
-                    mediaElement.UnloadedBehavior = MediaState.Manual;
-                    mediaElement.Play();
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            InkCanvas.SetLeft(mediaElement, 0);
+                            InkCanvas.SetTop(mediaElement, 0);
+                            inkCanvas.Children.Add(mediaElement);
 
-                    timeMachine.CommitElementInsertHistory(mediaElement);
-                }
+                            mediaElement.LoadedBehavior = MediaState.Manual;
+                            mediaElement.UnloadedBehavior = MediaState.Manual;
+                            mediaElement.Play();
+
+                            timeMachine.CommitElementInsertHistory(mediaElement);
+                        });
+                    }
+                });
             }
         }
 
         private async Task<MediaElement> CreateMediaElementAsync(string filePath)
         {
-            string savePath = Path.Combine(Settings.Automation.AutoSavedStrokesLocation, "File Dependency");
+            string savePath = Path.Combine(settings.Automation.AutoSavedStrokesLocation, "File Dependency");
             if (!Directory.Exists(savePath))
             {
                 Directory.CreateDirectory(savePath);
             }
-            return await Dispatcher.InvokeAsync(() =>
-            {
-                MediaElement mediaElement = new MediaElement();
-                mediaElement.Source = new Uri(filePath);
-                string timestamp = "media_" + DateTime.Now.ToString("yyyyMMdd_HH_mm_ss_fff");
-                mediaElement.Name = timestamp;
-                mediaElement.LoadedBehavior = MediaState.Manual;
-                mediaElement.UnloadedBehavior = MediaState.Manual;
 
-                mediaElement.Width = 256;
-                mediaElement.Height = 256;
+            return await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                MediaElement mediaElement = new MediaElement
+                {
+                    Source = new Uri(filePath),
+                    LoadedBehavior = MediaState.Manual,
+                    UnloadedBehavior = MediaState.Manual,
+                    Width = 256,
+                    Height = 256
+                };
 
                 string fileExtension = Path.GetExtension(filePath);
-                string newFilePath = Path.Combine(savePath, mediaElement.Name + fileExtension);
+                string newFilePath = Path.Combine(savePath, "media_" + DateTime.Now.ToString("yyyyMMdd_HH_mm_ss_fff") + fileExtension);
 
                 File.Copy(filePath, newFilePath, true);
 

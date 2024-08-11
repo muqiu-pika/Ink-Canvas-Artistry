@@ -17,6 +17,7 @@ namespace Ink_Canvas
     public partial class MainWindow : Window
     {
         private MW_Video videoHelper;
+        private MW_ElementsControls elementsControls;
         #region Window Initialization
 
         public MainWindow()
@@ -27,8 +28,13 @@ namespace Ink_Canvas
             */
             InitializeComponent();
 
-            TimeMachine timeMachine = new TimeMachine();  // 创建TimeMachine实例
-            videoHelper = new MW_Video(ThumbnailList, CameraDeviceList, SaveResultBorder, SaveResultIcon, SaveResultText, SaveButton, CaptureButton, ConfirmButton, CancelButton, ScreenshotButton, inkCanvas, timeMachine);
+            TimeMachine timeMachine = new TimeMachine();
+            elementsControls = new MW_ElementsControls(inkCanvas, timeMachine, ThumbnailList);
+            videoHelper = new MW_Video(CameraDeviceList, SaveResultBorder, SaveResultIcon, SaveResultText, SaveButton, CaptureButton, ConfirmButton, CancelButton, ScreenshotButton);
+
+            videoHelper.LoadCameraDevices();
+            ToolPanelContainer.Visibility = Visibility.Collapsed;
+
             videoHelper.LoadCameraDevices();
             ToolPanelContainer.Visibility = Visibility.Collapsed;
 
@@ -173,7 +179,7 @@ namespace Ink_Canvas
 
         private void CaptureButton_Click(object sender, RoutedEventArgs e)
         {
-            videoHelper.CaptureButton_Click(sender, e);
+            elementsControls.BtnImageInsert_Click(sender, e);
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -203,14 +209,12 @@ namespace Ink_Canvas
 
         private void ThumbnailList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            videoHelper.HandleThumbnailSelectionChanged();
+            elementsControls.ThumbnailList_SelectionChanged(sender, e);
         }
 
-        // 添加 BtnImageInsert_Click 方法
-        private void BtnImageInsert_Click(object sender, RoutedEventArgs e)
+        private void BtnMediaInsert_Click(object sender, RoutedEventArgs e)
         {
-            // 此处调用 MW_Video 中的方法来处理图像插入
-            videoHelper.CaptureButton_Click(sender, e);
+            elementsControls.BtnMediaInsert_Click(sender, e);
         }
 
         #endregion Ink Canvas Functions
